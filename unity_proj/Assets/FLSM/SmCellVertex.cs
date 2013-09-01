@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
+/*
 public class SmCellVertex
 {
     public Vector3  mPosition                   = Vector3.zero;
@@ -75,3 +76,5 @@ public class SmCellVertex
         }
     }
 }
+ 
+*/

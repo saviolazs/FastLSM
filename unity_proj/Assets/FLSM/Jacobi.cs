@@ -68,16 +68,20 @@ public static class Jacobi
         float q     = 0.0f;
         float t     = 0.0f;
         float c     = 0.0f;
-        float s     = 0.0f ;
+        float s     = 0.0f;
 	    float atemp = 0.0f;
         float vtemp = 0.0f;
         float dtemp = 0.0f;
+		int i = 0;
+		int j = 0;
+		int k = 0;
+		int l = 0;
 
         d[0] = a[GetMatrix3x3ElementIndex(0)];
         d[1] = a[GetMatrix3x3ElementIndex(4)];
         d[2] = a[GetMatrix3x3ElementIndex(8)];
 
-        for (int l = 1; l <= MAX_SWEEPS; ++l)
+        for (l = 1; l <= MAX_SWEEPS; ++l)
         {
             dnorm = Mathf.Abs(d[0]) + Mathf.Abs(d[1]) + Mathf.Abs(d[2]);
             onorm = Mathf.Abs(a[GetMatrix3x3ElementIndex(1)]) + Mathf.Abs(a[GetMatrix3x3ElementIndex(2)]) + Mathf.Abs(a[GetMatrix3x3ElementIndex(5)]);
@@ -88,9 +92,9 @@ public static class Jacobi
                 return;
 			}
 
-            for (int j = 1; j < n; ++j)
+            for (j = 1; j < n; ++j)
 		    {
-			    for (int i = 0; i <= j - 1; ++i)
+			    for (i = 0; i <= j - 1; ++i)
 			    {
 
 				    b = a[GetMatrix3x3ElementIndex(n*i+j)];
@@ -111,28 +115,28 @@ public static class Jacobi
 					    s = t * c;
 					    a[GetMatrix3x3ElementIndex(n*i+j)] = 0.0f;
 
-					    for (int k = 0; k <= i-1; ++k)
+					    for (k = 0; k <= i-1; ++k)
 					    {
 						    atemp = c * a[GetMatrix3x3ElementIndex(n*k+i)] - s * a[GetMatrix3x3ElementIndex(n*k+j)];
 						    a[GetMatrix3x3ElementIndex(n*k+j)] = s * a[GetMatrix3x3ElementIndex(n*k+i)] + c * a[GetMatrix3x3ElementIndex(n*k+j)];
 						    a[GetMatrix3x3ElementIndex(n*k+i)] = atemp;
 					    }
 
-					    for (int k = i+1; k <= j-1; ++k)
+					    for (k = i+1; k <= j-1; ++k)
 					    {
 						    atemp = c * a[GetMatrix3x3ElementIndex(n*i+k)] - s * a[GetMatrix3x3ElementIndex(n*k+j)];
 						    a[GetMatrix3x3ElementIndex(n*k+j)] = s * a[GetMatrix3x3ElementIndex(n*i+k)] + c * a[GetMatrix3x3ElementIndex(n*k+j)];
 						    a[GetMatrix3x3ElementIndex(n*i+k)] = atemp;
 					    }
 
-					    for (int k = j+1; k < n; ++k)
+					    for (k = j+1; k < n; ++k)
 					    {
 						    atemp = c * a[GetMatrix3x3ElementIndex(n*i+k)] - s * a[GetMatrix3x3ElementIndex(n*j+k)];
 						    a[GetMatrix3x3ElementIndex(n*j+k)] = s * a[GetMatrix3x3ElementIndex(n*i+k)] + c * a[GetMatrix3x3ElementIndex(n*j+k)];
 						    a[GetMatrix3x3ElementIndex(n*i+k)] = atemp;
 					    }
 
-					    for (int k = 0; k < n; ++k)
+					    for (k = 0; k < n; ++k)
 					    {
 						    vtemp = c * v[GetMatrix3x3ElementIndex(n*k+i)] - s * v[GetMatrix3x3ElementIndex(n*k+j)];
 						    v[GetMatrix3x3ElementIndex(n*k+j)] = s * v[GetMatrix3x3ElementIndex(n*k+i)] + c * v[GetMatrix3x3ElementIndex(n*k+j)];

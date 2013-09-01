@@ -1,0 +1,75 @@
+fileFormatVersion: 2
+guid: 34f9e11a9147b7d459466c70ff90bf67
+ModelImporter:
+  serializedVersion: 15
+  fileIDToRecycleName:
+    100000: Hedra011
+    100002: Hedra012
+    100004: Hedra013
+    100006: //RootNode
+    400000: Hedra011
+    400002: Hedra012
+    400004: Hedra013
+    400006: //RootNode
+    2300000: Hedra011
+    2300002: Hedra012
+    2300004: Hedra013
+    3300000: Hedra011
+    3300002: Hedra012
+    3300004: Hedra013
+    4300000: Hedra011
+    4300002: Hedra012
+    4300004: Hedra013
+    9500000: //RootNode
+  materials:
+    importMaterials: 1
+    materialName: 0
+    materialSearch: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    animationCompression: 1
+    animationRotationError: .5
+    animationPositionError: .5
+    animationScaleError: .5
+    animationWrapMode: 0
+    clipAnimations: []
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: .0500000007
+    meshCompression: 0
+    addColliders: 0
+    importBlendShapes: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    weldVertices: 1
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+  tangentSpace:
+    normalSmoothAngle: 60
+    splitTangentsAcrossUV: 1
+    normalImportMode: 1
+    tangentImportMode: 2
+  importAnimation: 0
+  copyAvatar: 0
+  humanDescription:
+    human: []
+    skeleton: []
+    handles: []
+    armTwist: .5
+    foreArmTwist: .5
+    upperLegTwist: .5
+    legTwist: .5
+    armStretch: .0500000007
+    legStretch: .0500000007
+    feetSpacing: 0
+    rootMotionBoneName: 
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  additionalBone: 1
+  animationType: 0
+  userData: 

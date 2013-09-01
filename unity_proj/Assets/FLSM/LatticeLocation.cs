@@ -14,8 +14,8 @@ public class LatticeLocation
 
     public Point3 mIndex = Point3.zero;
 	
-	public SmCell Cell
-	{get;set;}
+	//public SmCell Cell
+	//{get;set;}
 	
 	public bool RegionExists
 	{get;set;}
@@ -23,21 +23,24 @@ public class LatticeLocation
 	public bool IsEdge
 	{get;set;}
 	
-	public SmParticle SmParticle
-	{get;set;}
+	//public SmParticle SmParticle
+	//{get;set;}
 	
 	public SmRegion Region
 	{get;set;}
 
     public uint TheTouch
     { get; set; }
-
+	
+	//Particles
+	public SmParticle[] 			mParticles 				= new SmParticle[8];
+	
 	// The IMMEDIATE immediateNeighbors
 	public List<LatticeLocation> 	mImmediateNeighbors 	= new List<LatticeLocation>();
 	public LatticeLocation[,,]		mImmediateNeighborsGrid	= new LatticeLocation[3,3,3];
 	// Generated
 	public List<LatticeLocation> 	mNeighborhood 			= new List<LatticeLocation>();
-    public List<Summation>[]        mSummations = new List<Summation>[2];
+    public List<Summation>[]        mSummations 			= new List<Summation>[2];
 	
 	
 	public LatticeLocation()

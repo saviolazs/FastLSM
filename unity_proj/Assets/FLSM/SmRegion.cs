@@ -13,4 +13,6 @@ public class SmRegion : Summation
 
     public Vector3 mT = Vector3.zero;
     public Matrix3x3 mR = Matrix3x3.zero;
+	
+	public Color color = new Color(Random.Range(0.0f, 1.0f), Random.Range(0.0f, 1.0f), Random.Range(0.0f, 1.0f), 1.0f);
 }

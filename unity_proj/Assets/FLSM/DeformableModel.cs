@@ -42,7 +42,7 @@ public class DeformableModel
 	public List<LatticeLocation> 					mLatticeLocationsWithExistentRegions	= new List<LatticeLocation>();
 	public List<SmParticle>							mParticles								= new List<SmParticle>();
 	public List<SmRegion>							mRegions								= new List<SmRegion>();
-	public List<SmCell>								mCells									= new List<SmCell>();
+	//public List<SmCell>								mCells									= new List<SmCell>();
     public List<Summation>[]                        mSummations                             = new List<Summation>[2];
 
     // Generation
@@ -60,6 +60,351 @@ public class DeformableModel
 		IsDirty			= true;
 	}
 	
+	public void AddCell(Point3 index)
+	{
+		LatticeLocation l = new LatticeLocation();
+		mLatticeLocations.Add(l);
+		mLattice[index] = l;
+        l.mIndex = index;
+        l.Body = this;
+        l.Region = null;
+
+        for (int xo = -1; xo <= 1; ++xo)
+        {
+            for (int yo = -1; yo <= 1; ++yo)
+            {
+                for (int zo = -1; zo <= 1; ++zo)
+                {
+                    Point3 check = new Point3(index.x + xo, index.y + yo, index.z + zo);
+                    if (!(xo == 0 && yo == 0 && zo == 0) && GetLatticeLocation(check) != null)
+                    {
+                        l.mImmediateNeighbors.Add(GetLatticeLocation(check));
+                        l.mImmediateNeighborsGrid[xo + 1, yo + 1, zo + 1] = GetLatticeLocation(check);
+                        GetLatticeLocation(check).mImmediateNeighbors.Add(l);
+                        GetLatticeLocation(check).mImmediateNeighborsGrid[-xo + 1, -yo + 1, -zo + 1] = l;
+                    }
+                    else
+                    {
+                        l.mImmediateNeighborsGrid[xo + 1, yo + 1, zo + 1] = null;
+                    }
+                }
+            }
+        }
+		
+		/*
+        l.SmParticle = new SmParticle();
+        mParticles.Add(l.SmParticle);
+        l.SmParticle.LP = l;
+        l.SmParticle.mX0 = Vector3.Scale(new Vector3((float)index.x, (float)index.y, (float)index.z), mSpacing);
+        l.SmParticle.Mass = DefaultParticleMass;
+        l.SmParticle.mX = l.SmParticle.mX0;
+        l.SmParticle.mV = Vector3.zero;
+        l.SmParticle.mF = Vector3.zero;
+        */
+	}
+	
+	/*
+	 * 
+	 *        /5|-----------/|7
+	 *       /  |          / |
+	 *     2|---|---------|6 |
+	 *      |   |         |  |
+	 *      |   |         |  |
+	 *      |   |3        |  |
+	 *      |  /----------|-/4
+	 *      | /           |/
+	 *      |-------------|
+	 *      0             1
+	 */ 
+	
+	Vector3 GetParticleInitPostion(Point3 latticeIndex, int particleIndex)
+	{
+		Vector3 vPos 	= Vector3.Scale(new Vector3((float)latticeIndex.x, (float)latticeIndex.y, (float)latticeIndex.z), mSpacing);
+		Vector3 vOffset = Vector3.zero;
+		switch (particleIndex)
+		{	
+		case 0:
+			vOffset.x = -mSpacing.x / 2;
+			vOffset.y = -mSpacing.y / 2;
+			vOffset.z = -mSpacing.z / 2;
+			break;
+		case 1:
+			vOffset.x = mSpacing.x / 2;
+			vOffset.y = -mSpacing.y / 2;
+			vOffset.z = -mSpacing.z / 2;
+			break;
+		case 2:
+			vOffset.x = -mSpacing.x / 2;
+			vOffset.y = mSpacing.y / 2;
+			vOffset.z = -mSpacing.z / 2;
+			break;
+		case 3:
+			vOffset.x = -mSpacing.x / 2;
+			vOffset.y = -mSpacing.y / 2;
+			vOffset.z = mSpacing.z / 2;
+			break;
+		case 4:
+			vOffset.x = mSpacing.x / 2;
+			vOffset.y = -mSpacing.y / 2;
+			vOffset.z = mSpacing.z / 2;
+			break;
+		case 5:
+			vOffset.x = -mSpacing.x / 2;
+			vOffset.y = mSpacing.y / 2;
+			vOffset.z = mSpacing.z / 2;
+			break;
+		case 6:
+			vOffset.x = mSpacing.x / 2;
+			vOffset.y = mSpacing.y / 2;
+			vOffset.z = -mSpacing.z / 2;
+			break;
+		case 7:
+			vOffset.x = mSpacing.x / 2;
+			vOffset.y = mSpacing.y / 2;
+			vOffset.z = mSpacing.z / 2;
+			break;
+		}
+		return vPos + vOffset;
+	}
+	
+	SmParticle GetSharedParticle(Point3 latticeIndex, int particleIndex)
+	{
+		List<Point3> neighbors 			= new List<Point3>();
+		List<int>	 sharedParticles	= new List<int>();
+		
+		switch (particleIndex)
+		{	
+		case 0:
+			neighbors.Add(new Point3(latticeIndex.x - 1, latticeIndex.y, latticeIndex.z));
+			sharedParticles.Add(1);
+			
+			neighbors.Add(new Point3(latticeIndex.x - 1, latticeIndex.y - 1, latticeIndex.z));
+			sharedParticles.Add(6);
+			
+			neighbors.Add(new Point3(latticeIndex.x, latticeIndex.y - 1, latticeIndex.z));
+			sharedParticles.Add(2);
+			
+			neighbors.Add(new Point3(latticeIndex.x, latticeIndex.y, latticeIndex.z - 1));
+			sharedParticles.Add(3);
+			
+			neighbors.Add(new Point3(latticeIndex.x - 1, latticeIndex.y, latticeIndex.z - 1));
+			sharedParticles.Add(4);
+			
+			neighbors.Add(new Point3(latticeIndex.x - 1, latticeIndex.y - 1, latticeIndex.z - 1));
+			sharedParticles.Add(7);
+			
+			neighbors.Add(new Point3(latticeIndex.x, latticeIndex.y - 1, latticeIndex.z - 1));
+			sharedParticles.Add(5);
+			break;
+		case 1:
+			neighbors.Add(new Point3(latticeIndex.x + 1, latticeIndex.y, latticeIndex.z));
+			sharedParticles.Add(0);
+			
+			neighbors.Add(new Point3(latticeIndex.x + 1, latticeIndex.y - 1, latticeIndex.z));
+			sharedParticles.Add(2);
+			
+			neighbors.Add(new Point3(latticeIndex.x, latticeIndex.y - 1, latticeIndex.z));
+			sharedParticles.Add(6);
+			
+			neighbors.Add(new Point3(latticeIndex.x, latticeIndex.y, latticeIndex.z - 1));
+			sharedParticles.Add(4);
+			
+			neighbors.Add(new Point3(latticeIndex.x + 1, latticeIndex.y, latticeIndex.z - 1));
+			sharedParticles.Add(3);
+			
+			neighbors.Add(new Point3(latticeIndex.x + 1, latticeIndex.y - 1, latticeIndex.z - 1));
+			sharedParticles.Add(5);
+			
+			neighbors.Add(new Point3(latticeIndex.x, latticeIndex.y - 1, latticeIndex.z - 1));
+			sharedParticles.Add(7);
+			break;
+		case 2:
+			neighbors.Add(new Point3(latticeIndex.x - 1, latticeIndex.y, latticeIndex.z));
+			sharedParticles.Add(6);
+			
+			neighbors.Add(new Point3(latticeIndex.x - 1, latticeIndex.y + 1, latticeIndex.z));
+			sharedParticles.Add(1);
+			
+			neighbors.Add(new Point3(latticeIndex.x, latticeIndex.y + 1, latticeIndex.z));
+			sharedParticles.Add(0);
+			
+			neighbors.Add(new Point3(latticeIndex.x, latticeIndex.y, latticeIndex.z - 1));
+			sharedParticles.Add(5);
+			
+			neighbors.Add(new Point3(latticeIndex.x - 1, latticeIndex.y, latticeIndex.z - 1));
+			sharedParticles.Add(7);
+			
+			neighbors.Add(new Point3(latticeIndex.x - 1, latticeIndex.y + 1, latticeIndex.z - 1));
+			sharedParticles.Add(4);
+			
+			neighbors.Add(new Point3(latticeIndex.x, latticeIndex.y + 1, latticeIndex.z - 1));
+			sharedParticles.Add(3);
+			break;
+		case 3:
+			neighbors.Add(new Point3(latticeIndex.x - 1, latticeIndex.y, latticeIndex.z));
+			sharedParticles.Add(4);
+			
+			neighbors.Add(new Point3(latticeIndex.x - 1, latticeIndex.y - 1, latticeIndex.z));
+			sharedParticles.Add(7);
+			
+			neighbors.Add(new Point3(latticeIndex.x, latticeIndex.y - 1, latticeIndex.z));
+			sharedParticles.Add(5);
+			
+			neighbors.Add(new Point3(latticeIndex.x, latticeIndex.y, latticeIndex.z + 1));
+			sharedParticles.Add(0);
+			
+			neighbors.Add(new Point3(latticeIndex.x - 1, latticeIndex.y, latticeIndex.z + 1));
+			sharedParticles.Add(1);
+			
+			neighbors.Add(new Point3(latticeIndex.x - 1, latticeIndex.y - 1, latticeIndex.z + 1));
+			sharedParticles.Add(6);
+			
+			neighbors.Add(new Point3(latticeIndex.x, latticeIndex.y - 1, latticeIndex.z + 1));
+			sharedParticles.Add(2);
+			break;
+		case 4:
+			neighbors.Add(new Point3(latticeIndex.x + 1, latticeIndex.y, latticeIndex.z));
+			sharedParticles.Add(3);
+			
+			neighbors.Add(new Point3(latticeIndex.x + 1, latticeIndex.y - 1, latticeIndex.z));
+			sharedParticles.Add(5);
+			
+			neighbors.Add(new Point3(latticeIndex.x, latticeIndex.y - 1, latticeIndex.z));
+			sharedParticles.Add(7);
+			
+			neighbors.Add(new Point3(latticeIndex.x, latticeIndex.y, latticeIndex.z + 1));
+			sharedParticles.Add(1);
+			
+			neighbors.Add(new Point3(latticeIndex.x + 1, latticeIndex.y, latticeIndex.z + 1));
+			sharedParticles.Add(0);
+			
+			neighbors.Add(new Point3(latticeIndex.x + 1, latticeIndex.y - 1, latticeIndex.z + 1));
+			sharedParticles.Add(2);
+			
+			neighbors.Add(new Point3(latticeIndex.x, latticeIndex.y - 1, latticeIndex.z + 1));
+			sharedParticles.Add(6);
+			break;
+		case 5:
+			neighbors.Add(new Point3(latticeIndex.x - 1, latticeIndex.y, latticeIndex.z));
+			sharedParticles.Add(7);
+			
+			neighbors.Add(new Point3(latticeIndex.x - 1, latticeIndex.y + 1, latticeIndex.z));
+			sharedParticles.Add(4);
+			
+			neighbors.Add(new Point3(latticeIndex.x, latticeIndex.y + 1, latticeIndex.z));
+			sharedParticles.Add(3);
+			
+			neighbors.Add(new Point3(latticeIndex.x, latticeIndex.y, latticeIndex.z + 1));
+			sharedParticles.Add(2);
+			
+			neighbors.Add(new Point3(latticeIndex.x - 1, latticeIndex.y, latticeIndex.z + 1));
+			sharedParticles.Add(6);
+			
+			neighbors.Add(new Point3(latticeIndex.x - 1, latticeIndex.y + 1, latticeIndex.z + 1));
+			sharedParticles.Add(1);
+			
+			neighbors.Add(new Point3(latticeIndex.x, latticeIndex.y + 1, latticeIndex.z + 1));
+			sharedParticles.Add(0);
+			break;
+		case 6:
+			neighbors.Add(new Point3(latticeIndex.x + 1, latticeIndex.y, latticeIndex.z));
+			sharedParticles.Add(2);
+			
+			neighbors.Add(new Point3(latticeIndex.x + 1, latticeIndex.y + 1, latticeIndex.z));
+			sharedParticles.Add(0);
+			
+			neighbors.Add(new Point3(latticeIndex.x, latticeIndex.y + 1, latticeIndex.z));
+			sharedParticles.Add(1);
+			
+			neighbors.Add(new Point3(latticeIndex.x, latticeIndex.y, latticeIndex.z - 1));
+			sharedParticles.Add(7);
+			
+			neighbors.Add(new Point3(latticeIndex.x + 1, latticeIndex.y, latticeIndex.z - 1));
+			sharedParticles.Add(5);
+			
+			neighbors.Add(new Point3(latticeIndex.x + 1, latticeIndex.y + 1, latticeIndex.z - 1));
+			sharedParticles.Add(3);
+			
+			neighbors.Add(new Point3(latticeIndex.x, latticeIndex.y + 1, latticeIndex.z - 1));
+			sharedParticles.Add(4);
+			break;
+		case 7:
+			neighbors.Add(new Point3(latticeIndex.x + 1, latticeIndex.y, latticeIndex.z));
+			sharedParticles.Add(5);
+			
+			neighbors.Add(new Point3(latticeIndex.x + 1, latticeIndex.y + 1, latticeIndex.z));
+			sharedParticles.Add(3);
+			
+			neighbors.Add(new Point3(latticeIndex.x, latticeIndex.y + 1, latticeIndex.z));
+			sharedParticles.Add(4);
+			
+			neighbors.Add(new Point3(latticeIndex.x, latticeIndex.y, latticeIndex.z + 1));
+			sharedParticles.Add(6);
+			
+			neighbors.Add(new Point3(latticeIndex.x + 1, latticeIndex.y, latticeIndex.z + 1));
+			sharedParticles.Add(2);
+			
+			neighbors.Add(new Point3(latticeIndex.x + 1, latticeIndex.y + 1, latticeIndex.z + 1));
+			sharedParticles.Add(0);
+			
+			neighbors.Add(new Point3(latticeIndex.x, latticeIndex.y + 1, latticeIndex.z + 1));
+			sharedParticles.Add(1);
+			break;
+		default:
+			return null;
+		}
+		
+		if (neighbors.Count != sharedParticles.Count)
+			return null;
+		
+		for (int i = 0; i != neighbors.Count; ++i)
+		{
+			LatticeLocation ll = GetLatticeLocation(neighbors[i]);
+			if (null != ll)
+			{
+				if (null != ll.mParticles[sharedParticles[i]])
+				{
+					return ll.mParticles[sharedParticles[i]];
+				}
+			}
+		}
+		
+		return null;
+	}
+	
+	public void InitializeParticles()
+	{
+		for (int i = 0; i != mLatticeLocations.Count; ++i)
+		{
+			LatticeLocation ll = mLatticeLocations[i];
+			
+			for (int j = 0; j != ll.mParticles.Length; ++j)
+			{
+				if (null != ll.mParticles[j])
+					continue;
+				
+				SmParticle sp = GetSharedParticle(ll.mIndex, j);
+				if (null != sp)
+				{
+					ll.mParticles[j] = sp;
+				}
+				else
+				{
+					ll.mParticles[j] = new SmParticle();
+					sp = ll.mParticles[j];
+			        mParticles.Add(sp);
+			        sp.LP 	= ll;
+			        sp.mX0 	= GetParticleInitPostion(ll.mIndex, j);
+			        sp.Mass = DefaultParticleMass;
+			        sp.mX 	= sp.mX0;
+			        sp.mV 	= Vector3.zero;
+			        sp.mF 	= Vector3.zero;
+				}
+			}
+		}
+	}
+	
+	/*
 	public void AddParticle(Point3 index)
 	{
 		LatticeLocation l = new LatticeLocation();
@@ -90,7 +435,7 @@ public class DeformableModel
                 }
             }
         }
-
+		
         l.SmParticle = new SmParticle();
         mParticles.Add(l.SmParticle);
         l.SmParticle.LP = l;
@@ -99,11 +444,13 @@ public class DeformableModel
         l.SmParticle.mX = l.SmParticle.mX0;
         l.SmParticle.mV = Vector3.zero;
         l.SmParticle.mF = Vector3.zero;
-        
 	}
+	*/
 
     public void Complete()
     {
+		InitializeParticles();
+		
         for (int i = 0; i != mLatticeLocations.Count; ++i)
         {
             LatticeLocation l = mLatticeLocations[i];
@@ -125,7 +472,7 @@ public class DeformableModel
 
         CalculateInvariants();
 
-        InitializeCells();		// Cells help with rendering
+        //InitializeCells();		// Cells help with rendering
     }
 
     // Simulation
@@ -152,7 +499,7 @@ public class DeformableModel
             Vector3 Fmixi = r.mSumData.mV;
             Matrix3x3 Fmixi0T = r.mSumData.mM;
 
-            r.mC = (1 / r.mM) * Fmixi;
+            r.mC = (1 / r.mM) * Fmixi;	//9
             r.mA = Fmixi0T - Matrix3x3.MultiplyWithTranspose(r.mM * r.mC, r.mC0);
 
             Matrix3x3 S = r.mA.transpose * r.mA;
@@ -293,7 +640,8 @@ public class DeformableModel
     public void DoFracturing()
     {
     }
-
+	
+	/*
     public void UpdateCellPositions()
     {
         for (int i = 0; i != mCells.Count; ++i)
@@ -302,6 +650,7 @@ public class DeformableModel
             cell.UpdateVertexPositions();
         }
     }
+    */
 
     // Fast summation
     public void SumParticlesToRegions()
@@ -359,7 +708,14 @@ public class DeformableModel
             for (int j = 0; j != l.mNeighborhood.Count; ++j)
             {
                 LatticeLocation l2 = l.mNeighborhood[j];
+				/*
                 l.Region.mParticles.Add(l2.SmParticle);
+                */
+				for (int k = 0; k != 8; ++k)
+				{
+					if (false == l.Region.mParticles.Contains(l2.mParticles[k]))
+						l.Region.mParticles.Add(l2.mParticles[k]);
+				}
             }
 
             l.Region.mParticles.Sort(SmParticle.CompareSmParticle);
@@ -403,7 +759,8 @@ public class DeformableModel
 		
 		Debug.Log(" done.");
     }
-
+	
+	/*
     public void InitializeCells()
     {
         for (int i = 0; i != mLatticeLocations.Count; ++i)
@@ -426,6 +783,7 @@ public class DeformableModel
             cell.Initialize2();
         }
     }
+    */
 
     public void RebuildRegions(ref List<LatticeLocation> regen)
     {
