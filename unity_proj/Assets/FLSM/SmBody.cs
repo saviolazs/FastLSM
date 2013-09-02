@@ -4,6 +4,8 @@ using System.Collections.Generic;
 
 public class SmBody : MonoBehaviour 
 {
+	//----------------------------------------------------------------------
+	
 	static float    h = 1.0f / 30.0f;
 	static Vector3  vGravity = new Vector3(0.0f, -9.8f, 0.0f);
 	
@@ -55,6 +57,7 @@ public class SmBody : MonoBehaviour
 	MeshFilter[] 	mMeshFilters 	= null;
 	Transform[]		mMeshTransforms = null;
 	Vector3[][]		mMeshVertices	= null;
+	int[][]			mMeshTriangles	= null;
 	
 	Color mParticleColor 	= Color.red;
 	Color mCellColor		= new Color(0.8f, 0.8f, 0.8f, 0.8f);
@@ -105,13 +108,13 @@ public class SmBody : MonoBehaviour
 		
 		int[] dimensions = new int[3]{mCellInfos.GetLength(0), mCellInfos.GetLength(1), mCellInfos.GetLength(2)};
 		
-		if (dimensions[0] > 2 && dimensions[1] > 2 && dimensions[2] > 2)
+		//if (dimensions[0] > 2 && dimensions[1] > 2 && dimensions[2] > 2)
 		{
-			for (int x = 1; x != dimensions[0] - 1; ++x)
+			for (int x = 0; x != dimensions[0]; ++x)
 			{
-				for (int y = 1; y != dimensions[1] - 1; ++y)
+				for (int y = 0; y != dimensions[1]; ++y)
 				{
-					for (int z = 1; z != dimensions[2] - 1; ++z)
+					for (int z = 0; z != dimensions[2]; ++z)
 					{
 						SmCellInfo info = mCellInfos[x,y,z];
 						if (info.mValid)
@@ -128,7 +131,23 @@ public class SmBody : MonoBehaviour
 	bool IsValidCell(int x, int y, int z)
 	{
 		SmCellInfo info = mCellInfos[x,y,z];
-		return true;
+		
+		for (int i = 0; i != mMeshTriangles.Length; ++i)
+		{
+			for (int j = 0; j < mMeshTriangles[i].Length; j += 3)
+			{
+				Vector3 v0 = transform.TransformPoint(mMeshTransforms[i].InverseTransformPoint(mMeshVertices[i][mMeshTriangles[i][j]]));
+				Vector3 v1 = transform.TransformPoint(mMeshTransforms[i].InverseTransformPoint(mMeshVertices[i][mMeshTriangles[i][j+1]]));
+				Vector3 v2 = transform.TransformPoint(mMeshTransforms[i].InverseTransformPoint(mMeshVertices[i][mMeshTriangles[i][j+2]]));
+				
+				if (Utility.Bounds_Triangle_Overlap(ref info.mBounds, ref v0, ref v1, ref v2))
+				{
+					return true;
+				}
+			}
+		}
+
+		return false;
 	}
 	
 	bool InitCells()
@@ -149,11 +168,14 @@ public class SmBody : MonoBehaviour
 		
 		mMeshVertices = new Vector3[mMeshFilters.Length][];
 		
+		mMeshTriangles = new int[mMeshFilters.Length][];
+		
 		for (int i = 0; i != mMeshFilters.Length; ++i)
 		{
 			MeshFilter mf = mMeshFilters[i];
 			mMeshTransforms[i] 	= mf.transform;
 			mMeshVertices[i]	= mf.mesh.vertices;
+			mMeshTriangles[i]	= mf.mesh.triangles;
 			
 			if (0 == i)
 			{
@@ -250,6 +272,8 @@ public class SmBody : MonoBehaviour
 	void Start () 
 	{
 		InitCells();
+		
+		ValidateCells();
 		
 		if (null == mDeformableModel)
 		{
@@ -381,6 +405,12 @@ public class SmBody : MonoBehaviour
 			mf.mesh.RecalculateBounds();
 		}
 	}
+	
+	/*
+	void OnDrawGizmos()
+	{
+	}
+	*/
 	
 	void OnDrawGizmosSelected()
 	{
